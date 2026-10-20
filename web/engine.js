@@ -139,8 +139,18 @@ export function rollingBacktest(history,method='long_gap',maxPeriods=450){
   }
   return {n,redMistakes,meanRed:redMistakes/n,redSafe,blueMistakes,blueRate:blueMistakes/n*100,randomRedExpected:36/33,randomBlueExpected:12.5};
 }
-export function nextIssue(issue){
-  const v=Number(issue);const year=Math.floor(v/1000),seq=v%1000;
-  if(seq<155)return String(year*1000+seq+1).padStart(5,'0');
-  return `${String(year+1).padStart(2,'0')}001`;
+/** Next expected issue based on the next normal draw day; dates around holidays may differ. */
+export function nextIssue(issue,lastDrawDate){
+  const v=Number(issue),year=Math.floor(v/1000),seq=v%1000;
+  if(lastDrawDate){
+    const cursor=new Date(lastDrawDate+'T12:00:00Z');
+    if(Number.isFinite(cursor.getTime())){
+      for(let i=0;i<8;i++){
+        cursor.setUTCDate(cursor.getUTCDate()+1);
+        if([0,2,4].includes(cursor.getUTCDay()))break;
+      }
+      if(cursor.getUTCFullYear()%100!==year)return String((cursor.getUTCFullYear()%100)*1000+1).padStart(5,'0');
+    }
+  }
+  return String(year*1000+seq+1).padStart(5,'0');
 }

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {normalizeHistory,parseFallbackCsv,rankExclusions,generateTickets,settleTickets,gradeTicket,historicalReplay,rollingBacktest,RED_TEMPLATE,STRATEGIES} from '../web/engine.js';
+import {normalizeHistory,parseFallbackCsv,rankExclusions,generateTickets,settleTickets,gradeTicket,historicalReplay,rollingBacktest,RED_TEMPLATE,STRATEGIES,nextIssue} from '../web/engine.js';
 
 const draws=normalizeHistory(parseFallbackCsv(readFileSync(new URL('../web/data/fallback.csv',import.meta.url),'utf8')));
 const comb=(n,k)=>{let t=1;for(let i=1;i<=k;i++)t=t*(n-i+1)/i;return t;};
@@ -62,4 +62,17 @@ test('replay and settlement return proper statistics',()=>{
  const replay=historicalReplay(x.tickets,draws);
  assert.equal(replay.n,157);assert.ok(replay.any>=replay.breakEven);
  const out=settleTickets(x.tickets,draws.at(-1));assert.equal(out.details.length,5);
+});
+
+test('next issue uses actual date and crosses New Year without guessed yearly max',()=>{
+ assert.equal(nextIssue('26119','2026-10-18'),'26120');
+ assert.equal(nextIssue('25151','2025-12-30'),'26001');
+ assert.equal(nextIssue('23150','2023-12-31'),'24001');
+ assert.equal(nextIssue('24152','2024-12-29'),'24153');
+});
+test('generated snapshot stores the source issue rather than claiming verified future results',()=>{
+ const x=generateTickets({history:draws,seed:20261020,strategy:'breakeven'});
+ assert.equal(x.snapshot.issue,'26119');
+ assert.equal(nextIssue(x.snapshot.issue,x.snapshot.date),'26120');
+ assert.equal(x.tickets.length,5);
 });

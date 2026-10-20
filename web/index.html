@@ -16,6 +16,8 @@
     <nav class="navigation" aria-label="主导航">
       <button class="nav-link active" data-page="generate"><span>◈</span> 组合生成</button>
       <button class="nav-link" data-page="statistics"><span>▥</span> 号码统计</button>
+      <button class="nav-link" data-page="history"><span>◷</span> 历史开奖</button>
+      <button class="nav-link" data-page="forecast"><span>◇</span> 自动预测</button>
       <button class="nav-link" data-page="backtest"><span>⌁</span> 策略回测</button>
       <button class="nav-link" data-page="records"><span>▤</span> 我的记录 <span id="savedCount" class="nav-number">0</span></button>
     </nav>
@@ -39,10 +41,11 @@
       </section>
 
       <div id="errorBanner" class="alert hidden" role="alert"></div>
+      <div class="data-notice" id="sourceNotice" role="status">数据来源：开源开奖记录镜像（非官方实时接口）。准备检查上游是否有更新…</div>
       <div class="snapshot">
         <div class="snapshot-block"><span class="eyebrow">最近已收录开奖</span><div class="statline"><b id="latestIssue">—</b><small>期</small></div><span class="dim" id="latestDate">读取中</span></div>
         <div class="snapshot-block"><span class="eyebrow">历史开奖记录</span><div class="statline"><b id="recordCount">—</b><small>期</small></div><span class="dim" id="recordScope">已通过数据校验</span></div>
-        <div class="snapshot-block"><span class="eyebrow">下一期实验期号</span><div class="statline"><b id="nextIssue">—</b><small>期</small></div><span class="dim">下期编号仅供参考</span></div>
+        <div class="snapshot-block"><span class="eyebrow">下一期实验期号</span><div class="statline"><b id="nextIssue">—</b><small>期</small></div><span class="dim">按常规开奖日推算，节假日以公告为准</span></div>
         <div class="snapshot-block last"><span class="eyebrow">更新状态</span><div class="statline"><b class="status-strong" id="freshLabel">—</b></div><button class="text-action" id="refreshBtn">刷新开奖结果 ↗</button></div>
       </div>
 
@@ -89,11 +92,42 @@
 
       <section class="page" id="page-statistics"><div class="section-heading"><div><h2>历史号码统计</h2><p>每个球的历史频率与遗漏情况，对比独立公平开奖的理论基线。</p></div><span class="section-kicker">02 / DATA</span></div><div class="panel"><div class="panel-title-row"><div><span class="overline">RED BALL FREQUENCY</span><h3>红球出现次数</h3></div><span class="pill" id="redAverage">—</span></div><div class="freq-grid" id="redBars"></div><p class="footnote">历史频率高低不代表未来中奖概率会随之升高或下降；理论单球出现率均为6/33。</p></div><div class="panel mt"><div class="panel-title-row"><div><span class="overline">BLUE BALL FREQUENCY</span><h3>蓝球出现次数</h3></div><span class="pill" id="blueAverage">—</span></div><div class="freq-grid blue-grid" id="blueBars"></div><p class="footnote">蓝球每期开奖的理论概率为1/16。</p></div></section>
 
+
+      <section class="page" id="page-history">
+        <div class="section-heading"><div><h2>历史开奖号码</h2><p>按日期或期号查询，完整显示每期红球、蓝球与来源；只显示已收录、校验通过的开奖记录。</p></div><span class="section-kicker">03 / HISTORY</span></div>
+        <div class="panel">
+          <div class="history-controls">
+            <label class="field-label" for="historySearch">检索期号或日期</label>
+            <input id="historySearch" class="history-search" type="search" placeholder="例如 26119、2026-10、10-18" autocomplete="off" />
+            <button class="secondary-btn" id="historyClear">清除检索</button>
+            <span class="dim" id="historyResultCount"></span>
+          </div>
+          <div class="history-table-wrap">
+            <table class="research-table history-table">
+              <thead><tr><th>开奖期号</th><th>开奖日期</th><th>6个红球</th><th>蓝球</th></tr></thead>
+              <tbody id="historyBody"></tbody>
+            </table>
+          </div>
+          <div class="history-pager"><button class="secondary-btn" id="historyPrev">上一页</button><span class="dim" id="historyPageLabel"></span><button class="secondary-btn" id="historyNext">下一页</button></div>
+          <p class="footnote">开奖数据源：<a href="https://github.com/yangxb919/lottery-data" target="_blank" rel="noopener noreferrer">yangxb919/lottery-data（第三方，整理自500.com）</a>。若发现新开奖未同步，请前往官方福利彩票网站核对；本站不自动采信未经核实的自媒体号码。</p>
+        </div>
+      </section>
+
+      <section class="page" id="page-forecast">
+        <div class="section-heading"><div><h2>自动预测与核验</h2><p>定时生成的公开实验快照，保存历史数据截止期、生成时间和号码；开奖后自动核验。</p></div><span class="section-kicker">04 / FORECAST</span></div>
+        <div class="panel">
+          <div class="data-notice">自动生成计划：常规周二、周四、周日北京时间17:00（GitHub Actions可能延迟）；最晚19:30才允许生成当期预测。若上游开奖数据滞后，系统跳过预测，不会事后补造。</div>
+          <div id="forecastSummary" class="baseline">正在获取自动预测记录…</div>
+          <div class="saved-list" id="forecastList"><div class="empty">暂无自动实验记录。</div></div>
+          <p class="footnote">这里仅保存自动任务事前生成的公开实验记录；「我的记录」仍只保存在当前浏览器。奖金1、2等奖为浮动奖，历史核验不估算其具体金额。</p>
+        </div>
+      </section>
+
       <section class="page" id="page-backtest"><div class="section-heading"><div><h2>动态排除策略回测</h2><p>每期仅使用之前的历史数据，避免未来信息泄露。</p></div><span class="section-kicker">03 / BACKTEST</span></div><div class="panel"><div class="panel-title-row"><div><span class="overline">ROLLING WALK-FORWARD</span><h3>各策略滚动检验</h3></div><span class="pill" id="testWindow">—</span></div><div class="table-wrap"><table class="research-table"><thead><tr><th>策略</th><th>测试期数</th><th>平均误排红球 ↓</th><th>红球完全未误排</th><th>蓝球误排率 ↓</th></tr></thead><tbody id="backtestBody"></tbody></table></div><div class="baseline">理论随机排除基线：平均每期误排 <strong>1.0909</strong> 个红球；蓝球误排率 <strong>12.5%</strong>。任何略优于基线的短期表现都可能是统计波动。</div></div></section>
 
       <section class="page" id="page-records"><div class="section-heading"><div><h2>我的实验记录</h2><p>预测快照保存在当前浏览器中，开奖后按历史数据自动核对。</p></div><span class="section-kicker">04 / JOURNAL</span></div><div class="panel"><div class="panel-title-row"><div><span class="overline">LOCAL JOURNAL</span><h3>已保存方案</h3></div><button id="exportRecordsBtn" class="secondary-btn">导出 JSON</button></div><div id="savedList" class="saved-list"></div><p class="footnote">存储于浏览器 localStorage，不跨设备同步。保存快照后不会随算法更新而改写；一、二等奖实际奖金需以官方开奖公告为准。</p></div></section>
 
-      <footer><span>双色球研究实验室 V1 · 仅供数学与统计学习，不提供购彩或兑奖服务</span><span>理性购彩 · 请以官方开奖结果为准</span></footer>
+      <footer><span>双色球研究实验室 V1.1 · 仅供数学与统计学习，不提供购彩或兑奖服务</span><span>理性购彩 · 请以官方开奖结果为准</span></footer>
     </main>
   </div>
 </div>
