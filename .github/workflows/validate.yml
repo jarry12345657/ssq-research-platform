@@ -1,0 +1,39 @@
+name: Verify V2 changes
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Python tests
+        run: python -m unittest discover -s tests -p 'test_*.py' -v
+      - name: Node tests
+        run: node --test tests/*.test.mjs
+      - name: Validate browser and forecast modules
+        run: |
+          node --check web/engine.js
+          node --check web/app.js
+          node --check scripts/forecast.mjs
+      - name: Validate HTML page IDs for new sections
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          x=Path('web/index.html').read_text()
+          y=Path('web/app.js').read_text()
+          for id in ('historyBody','historySearch','historyNext','historyPrev','forecastList','sourceNotice'):
+              assert 'id="'+id+'"' in x, id
+              assert "'"+id+"'" in y, id
+          PY
