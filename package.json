@@ -1,0 +1,13 @@
+{
+  "name": "ssq-research-platform",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Zero-dependency static 双色球 strategy laboratory for GitHub Pages",
+  "scripts": {
+    "dev": "python -m http.server 8080 --directory web",
+    "test": "node --test tests/*.test.mjs",
+    "update": "python scripts/update_data.py",
+    "build": "python scripts/update_data.py --offline"
+  }
+}

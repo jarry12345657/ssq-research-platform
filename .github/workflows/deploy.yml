@@ -1,0 +1,52 @@
+name: Build data and deploy GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    # 双色球正常开奖日：周日/周二/周四，北京时间22:42（UTC 14:42）
+    - cron: '42 14 * * 0,2,4'
+    # 次日兜底，网络或上游晚更新时再次同步（北京时间次日上午10:17）
+    - cron: '17 2 * * 1,3,5'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  verify-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify Python data pipeline
+        run: python -m unittest discover -s tests -p 'test_*.py' -v
+      - name: Verify JavaScript generation logic
+        run: node --test tests/*.test.mjs
+      - name: Refresh history (retain validated fallback on network failure)
+        run: python scripts/update_data.py
+      - name: Inspect deployed data
+        run: python -c "import json; d=json.load(open('web/data/history.json')); print('Validated historical draws:', len(d)); assert len(d)>=100"
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Upload static website
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: web
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

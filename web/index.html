@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#132436" />
+  <meta name="description" content="双色球选号研究平台：历史开奖分析、动态号码排除、回本优先组合生成及滚动回测。仅供数学研究。" />
+  <title>双色球研究实验室 · V1</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+<div class="shell">
+  <aside class="side">
+    <div class="brand"><div class="brand-symbol">◎</div><div><b>双球研究室</b><small>SELECTION LAB · V1</small></div></div>
+    <p class="nav-label">工作空间</p>
+    <nav class="navigation" aria-label="主导航">
+      <button class="nav-link active" data-page="generate"><span>◈</span> 组合生成</button>
+      <button class="nav-link" data-page="statistics"><span>▥</span> 号码统计</button>
+      <button class="nav-link" data-page="backtest"><span>⌁</span> 策略回测</button>
+      <button class="nav-link" data-page="records"><span>▤</span> 我的记录 <span id="savedCount" class="nav-number">0</span></button>
+    </nav>
+    <div class="side-bottom">
+      <div class="side-live"><span class="live-dot"></span> 数据引擎 <span id="sideEngine">加载中</span></div>
+      <p>概率计算基于公平独立开奖。号码排除不代表这些数字未来更难出现。</p>
+      <a href="https://www.scflcp.com.cn/yxgz/823145252.jhtml" target="_blank" rel="noreferrer">开奖规则 ↗</a>
+    </div>
+  </aside>
+
+  <div class="workspace">
+    <header class="topbar"><div class="breadcrumbs">我的工作台 <span>/</span> <strong id="crumb">组合生成</strong></div><div class="top-info"><span class="pill neutral" id="dataStatus">正在加载开奖数据</span><span class="avatar">研</span></div></header>
+    <main class="main">
+      <section class="hero">
+        <div class="hero-content"><div class="hero-eyebrow"><span class="mini-line"></span> SSQ PROBABILITY RESEARCH</div>
+          <h1>让选号更有依据<span class="hero-period">.</span></h1>
+          <p>基于真实开奖记录的统计实验与组合概率优化。<br class="desktop-br">每一注有迹可循，每一个结论可被验证。</p>
+          <div class="hero-tags"><span>独立开奖假设</span><span>滚动历史回测</span><span>10 元默认预算</span></div>
+        </div>
+        <div class="hero-art" aria-hidden="true"><div class="orb orb-big">06</div><div class="orb orb-mid">22</div><div class="orb orb-small">11</div></div>
+      </section>
+
+      <div id="errorBanner" class="alert hidden" role="alert"></div>
+      <div class="snapshot">
+        <div class="snapshot-block"><span class="eyebrow">最近已收录开奖</span><div class="statline"><b id="latestIssue">—</b><small>期</small></div><span class="dim" id="latestDate">读取中</span></div>
+        <div class="snapshot-block"><span class="eyebrow">历史开奖记录</span><div class="statline"><b id="recordCount">—</b><small>期</small></div><span class="dim" id="recordScope">已通过数据校验</span></div>
+        <div class="snapshot-block"><span class="eyebrow">下一期实验期号</span><div class="statline"><b id="nextIssue">—</b><small>期</small></div><span class="dim">下期编号仅供参考</span></div>
+        <div class="snapshot-block last"><span class="eyebrow">更新状态</span><div class="statline"><b class="status-strong" id="freshLabel">—</b></div><button class="text-action" id="refreshBtn">刷新开奖结果 ↗</button></div>
+      </div>
+
+      <section class="page active" id="page-generate">
+        <div class="section-heading"><div><h2>智能组合生成</h2><p>选择统计规则与奖金目标，生成不同号码但保持组合结构。</p></div><span class="section-kicker">01 / GENERATOR</span></div>
+        <div class="two-columns">
+          <div class="panel controls-panel">
+            <div class="panel-head"><div class="panel-index">01</div><div><h3>配置选号规则</h3><p>默认 5 注，共 10 元</p></div></div>
+            <label class="field-label" for="method">动态杀号策略</label>
+            <select id="method" class="input-select">
+              <option value="long_gap">遗漏最长（实验优先）</option>
+              <option value="cold100">近100期低频</option>
+              <option value="cold30">近30期低频</option>
+              <option value="cold300">近300期低频</option>
+              <option value="hot30">近30期高频</option>
+              <option value="hybrid">综合冷号评分</option>
+            </select>
+            <div class="small-explain">按所选规则排除号码。历史统计与未来概率无因果保证。</div>
+            <div class="field-label">优化目标</div>
+            <div class="strategy-list" id="strategyList">
+              <label class="strategy-option"><input type="radio" name="strategy" value="coverage"><span class="strategy-icon">◉</span><span><strong>中奖优先</strong><small>尽量扩大至少中一个奖的概率</small></span><span class="radio-styled"></span></label>
+              <label class="strategy-option"><input type="radio" name="strategy" value="breakeven" checked><span class="strategy-icon">◎</span><span><strong>回本优先 <em>推荐</em></strong><small>重点提高奖金达到 10 元的概率</small></span><span class="radio-styled"></span></label>
+              <label class="strategy-option"><input type="radio" name="strategy" value="profit"><span class="strategy-icon">↗</span><span><strong>盈利优先</strong><small>重点提高奖金超过 10 元的概率</small></span><span class="radio-styled"></span></label>
+            </div>
+            <div class="counts"><div><span class="field-label">红球排除</span><div class="stepper"><button id="redMinus" aria-label="减少红球排除">−</button><b id="redCount">6</b><button id="redPlus" aria-label="增加红球排除">＋</button></div></div><div><span class="field-label">蓝球排除</span><div class="stepper"><button id="blueMinus" aria-label="减少蓝球排除">−</button><b id="blueCount">2</b><button id="bluePlus" aria-label="增加蓝球排除">＋</button></div></div></div>
+            <p class="tiny-muted">支持排除红球 0–6 个、蓝球 0–11 个。保持5注、每注2元。</p>
+            <button id="generateBtn" class="primary-btn"><span>✦</span> 生成 5 注实验号码 <span class="btn-arrow">→</span></button>
+          </div>
+
+          <div class="right-stack">
+            <div class="panel output-panel">
+              <div class="panel-title-row"><div><span class="overline">PREDICTION OUTPUT</span><h3>本期建议组合</h3></div><span id="outputIssue" class="issue-badge">—</span></div>
+              <div class="exclude-section"><div class="subhead">排除号码 <span>实验筛选，不是开奖限制</span></div><div class="exclude-lists"><div class="exclude-row"><span>红球</span><div id="redExclusions" class="balls balls-mini"></div></div><div class="exclude-row"><span>蓝球</span><div id="blueExclusions" class="balls balls-mini"></div></div></div></div>
+              <div class="ticket-header"><span>5注号码</span><span class="dim">红球 6 + 蓝球 1</span></div>
+              <div id="tickets" class="ticket-list"><div class="empty">获取历史开奖后即可生成</div></div>
+              <div class="actions"><button id="copyBtn" class="secondary-btn">▢ 复制号码</button><button id="saveBtn" class="secondary-btn">♡ 保存组合</button><button id="downloadBtn" class="secondary-btn">⇩ 导出 CSV</button></div>
+            </div>
+            <div class="metrics-grid"><div class="metric-card"><span>任意奖概率</span><strong id="metricAny">—</strong><small>至少一注中奖</small></div><div class="metric-card focus"><span>回本概率</span><strong id="metricBack">—</strong><small>累计奖金 ≥ ¥10</small></div><div class="metric-card"><span>盈利概率</span><strong id="metricProfit">—</strong><small>累计奖金 ＞ ¥10</small></div></div>
+            <div class="info-note"><strong>概率与策略说明</strong><p id="metricExplain">使用组合覆盖的精确概率，不根据冷热号人为调整开奖概率。</p></div>
+          </div>
+        </div>
+        <div class="two-columns lower"><div class="panel"><div class="panel-title-row"><div><span class="overline">HISTORICAL REPLAY</span><h3>当前固定号码的历史回放</h3></div><span class="pill">非事前预测</span></div><div class="replay-stats" id="replayStats"><div class="empty">生成号码后显示</div></div><p class="footnote">将今天生成的同一组号码套到历史开奖，不是滚动预测命中率；样本内吻合不说明未来更容易中奖。</p></div><div class="panel"><div class="panel-title-row"><div><span class="overline">METHODOLOGY</span><h3>算法如何工作</h3></div></div><div class="steps"><div><b>01</b><span>计算历史统计与指定数量的候选排除号码</span></div><div><b>02</b><span>剩余号码映射至低重叠的5注组合模板</span></div><div><b>03</b><span>按 1+1+1+1+1 / 2+2+1 / 3+2 配置蓝球</span></div><div><b>04</b><span>显示已精确枚举验证的组合结构理论概率</span></div></div></div></div>
+      </section>
+
+      <section class="page" id="page-statistics"><div class="section-heading"><div><h2>历史号码统计</h2><p>每个球的历史频率与遗漏情况，对比独立公平开奖的理论基线。</p></div><span class="section-kicker">02 / DATA</span></div><div class="panel"><div class="panel-title-row"><div><span class="overline">RED BALL FREQUENCY</span><h3>红球出现次数</h3></div><span class="pill" id="redAverage">—</span></div><div class="freq-grid" id="redBars"></div><p class="footnote">历史频率高低不代表未来中奖概率会随之升高或下降；理论单球出现率均为6/33。</p></div><div class="panel mt"><div class="panel-title-row"><div><span class="overline">BLUE BALL FREQUENCY</span><h3>蓝球出现次数</h3></div><span class="pill" id="blueAverage">—</span></div><div class="freq-grid blue-grid" id="blueBars"></div><p class="footnote">蓝球每期开奖的理论概率为1/16。</p></div></section>
+
+      <section class="page" id="page-backtest"><div class="section-heading"><div><h2>动态排除策略回测</h2><p>每期仅使用之前的历史数据，避免未来信息泄露。</p></div><span class="section-kicker">03 / BACKTEST</span></div><div class="panel"><div class="panel-title-row"><div><span class="overline">ROLLING WALK-FORWARD</span><h3>各策略滚动检验</h3></div><span class="pill" id="testWindow">—</span></div><div class="table-wrap"><table class="research-table"><thead><tr><th>策略</th><th>测试期数</th><th>平均误排红球 ↓</th><th>红球完全未误排</th><th>蓝球误排率 ↓</th></tr></thead><tbody id="backtestBody"></tbody></table></div><div class="baseline">理论随机排除基线：平均每期误排 <strong>1.0909</strong> 个红球；蓝球误排率 <strong>12.5%</strong>。任何略优于基线的短期表现都可能是统计波动。</div></div></section>
+
+      <section class="page" id="page-records"><div class="section-heading"><div><h2>我的实验记录</h2><p>预测快照保存在当前浏览器中，开奖后按历史数据自动核对。</p></div><span class="section-kicker">04 / JOURNAL</span></div><div class="panel"><div class="panel-title-row"><div><span class="overline">LOCAL JOURNAL</span><h3>已保存方案</h3></div><button id="exportRecordsBtn" class="secondary-btn">导出 JSON</button></div><div id="savedList" class="saved-list"></div><p class="footnote">存储于浏览器 localStorage，不跨设备同步。保存快照后不会随算法更新而改写；一、二等奖实际奖金需以官方开奖公告为准。</p></div></section>
+
+      <footer><span>双色球研究实验室 V1 · 仅供数学与统计学习，不提供购彩或兑奖服务</span><span>理性购彩 · 请以官方开奖结果为准</span></footer>
+    </main>
+  </div>
+</div>
+<div id="toast" class="toast hidden" role="status"></div>
+<script type="module" src="./app.js"></script>
+</body>
+</html>
